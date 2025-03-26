@@ -60,3 +60,25 @@ cmatrix<uint8_t> cv = mv; // Copy construct
 copy = (cv[0][0] == mv[0][0]) & ( (&(cv[0][0])) == (&(mv[0][0])) );
 ```
 
+## Benchmark
+Allocation and memory RW of data for various array type.
+
+| Array     | -O# |  Speed (s) |
+|-----------|-----|------------|
+| static    | -O0 | 0.386      |
+| static    | -O2 | 0.192      |
+| static    | -O3 | 0.166      |
+| carray    | -O0 | 1.023      |
+| carray    | -O2 | 0.168      |
+| carray    | -O3 | 0.147      |
+| vector    | -O0 | 0.95       |
+| vector    | -O2 | 0.196      |
+| vector    | -O3 | 0.164      |
+| boost     | -O0 | 9.860      |
+| boost     | -O2 | 0.371      |
+| boost     | -O3 | 0.187      |
+| eigen     | -O0 | 11.075     |
+| eigen     | -O2 | 0.171      |
+| eigen     | -O3 | 0.149      |
+
+
