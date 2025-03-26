@@ -1,3 +1,4 @@
 *.o
 carray_test
 make_aligned_test
+benchmark
