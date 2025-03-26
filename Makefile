@@ -9,6 +9,9 @@ $(TARGET).o:test/$(TARGET).cc
 $(TARGET):$(TARGET).o
 	${CXX} -o $(TARGET) $^ ${LDFLAGS} ${LDLIBS}
 
+leak-check:$(TARGET)
+	TARGET=carray_test valgrind --leak-check=full ./carray_test 
+
 clean:
 	$(RM) *.o
 
