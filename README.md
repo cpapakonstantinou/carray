@@ -1,7 +1,7 @@
 # carray
 carray is a class that encapsulates the construction of dynamically allocated & memory aligned contiguous arrays. Such arrays may find application in scientific and high performance computing. 
 
-- Libraries such as BLAS, FFTW, and others require contiguous arrays.
+- Libraries such as BLAS, LAPACK, FFTW, and others require contiguous arrays.
 - SIMD (Single Instruction, Multiple Data) use memory alignment for efficient memory access patterns.
 
 carray is a lightweight header only library that takes advantage of modern c++ semantics, and stdlib.
@@ -18,8 +18,10 @@ carray<uint8_t, 2, 64>
 cmatrix<uint8_t> mat(rows, cols);
 
 ```
-
-## Memory Layout and Alignment 
+## Licensing
+ carray is released under the MIT license. This library is distributed WITHOUT ANY WARRANTY. For details, see the file named 'LICENSE', and license statements in the source files.
+ 
+## Memory Layout and Alignment
 
 One points at sequential addressess linearly in contiguous memory. Traversal of this kind of memory is what CPU subsystems are best at, and what optimizes cache performance.
 Internally carray has a contiguous memory buffer and a pointer to the bufffer that arranges access to the buffer in row-major format.

@@ -215,7 +215,7 @@ int main(int argc, char* argv[])
 		{"static", test_static},
 		{"carray", test_carray},
 		{"std::vector", test_std_vector},
-		{"Boost Multi-Array", test_boost},
+		{"boost::multi_array", test_boost},
 		{"Eigen", test_eigen}
 	};
 	

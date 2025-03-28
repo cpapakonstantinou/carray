@@ -97,6 +97,39 @@ constructor_test()
 	return std::make_tuple(move, copy);
 }
 
+// std::tuple<bool, bool>
+// major_order_test()
+// {
+// 	bool r = true, c = true;
+
+// 	int rows = 3, cols = 3;
+
+// 	carray<uint8_t, 2, 64, ROW_MAJOR> rm{rows, cols};
+// 	carray<uint8_t, 2, 64, COL_MAJOR> cm{rows, cols};
+
+// 	// Test for row-major ordering
+// 	for (int i = 0; i < rows; i++) 
+// 		for (int j = 0; j < cols; j++) 
+// 		{
+// 			#if VERBOSE
+// 				printf("ROW MAJOR &A(i=%d,j=%d) = %p\n",i,j, &(rm(i, j)));
+// 			#endif
+// 			r &= (&(rm(i, j)) == &(rm(0, 0)) + i * cols + j);
+// 		}
+
+// 	// Test for column-major ordering
+// 	for (int i = 0; i < rows; i++) 
+// 		for (int j = 0; j < cols; j++) 
+// 		{
+// 			#if VERBOSE
+// 				printf("COL MAJOR &A(i=%d,j=%d) = %p\n",i,j, &(cm(i, j)));
+// 			#endif
+// 			c &= (&(cm(i, j)) == &(cm(0, 0)) + j * rows + i);
+// 		}
+
+// 	return std::make_tuple(r, c);
+// }
+
 
 int main(int argc, char* argv[])
 {
@@ -115,6 +148,11 @@ int main(int argc, char* argv[])
 		auto [mc, cc] = constructor_test();
 
 		printf("[%s] move construction \n[%s] copy construction\n", status(mc), status(cc) );
+
+		// auto [r, c] = major_order_test();
+
+		// printf("[%s] row major order \n[%s] column major order\n", status(r), status(c) );
+
 	}
 	catch(const std::exception& e)
 	{
