@@ -45,11 +45,11 @@ class carray
 	
 	public:
 		/**
-		 * \brief constructor
-		 * variadic constructor which accepts a parameter pack
-		 * parameter pack must expand to N elements
+		 *	\brief constructor.
+		 *	Variadic constructor which accepts a parameter pack.
+		 *	Parameter pack must expand to N elements.
 		 * 
-		 * \param 	ijk	parameter pack
+		 *	\param 	ijk	parameter pack
 		 */
 		template<class... IJK>
 		explicit
@@ -60,9 +60,10 @@ class carray
 			allocate_memory();
 		}
 
-		/*	\brief	copy constructor
-		*	internally carray uses a shared_ptr to manage the buffer
-		*	copy construction is safely supported
+		/**	
+		*	\brief copy constructor.
+		*	Internally carray uses a shared_ptr to manage the buffer.
+		*	Copy construction is safely supported
 		*	\param 	an initialized carray class
 		*/
 		carray(carray<T, N, A>& a):
@@ -71,9 +72,10 @@ class carray
 		ptr_(a.ptr_)
 		{}
 
-		/*	\brief	move constructor
-		*	internally carray uses a shared_ptr to manage the buffer
-		*	move construction is safely supported
+		/**	
+		*	\brief	move constructor.
+		*	Internally carray uses a shared_ptr to manage the buffer.
+		*	Move construction is safely supported.
 		*	\param 	i	number of rows
 		*/
 		carray(carray<T, N, A>&& a) noexcept:
@@ -83,7 +85,7 @@ class carray
 		{}
 
 		
-		/*	\brief	copy assignment operator*/
+		/**	\brief	Copy assignment operator. */
 		carray<T, N, A>& 
 		operator=(const carray<T, N, A>& a)
 		{
@@ -96,7 +98,7 @@ class carray
 			return *this;
 		}
 
-		/*	\brief move assignment operator*/
+		/**	\brief Move assignment operator. */
 		carray<T, N, A>& 
 		operator=(carray<T, N, A>&& a) noexcept
 		{
@@ -157,7 +159,7 @@ class carray
 
 
 	public:
-	/*	\brief Buffer RO operator. Used for read-only access to memory.*/
+	/**	\brief Buffer RO operator. Used for read-only access to memory. */
 	template<typename... IJK>
 	const T& operator()(IJK... ijk) const 
 	{
@@ -171,7 +173,7 @@ class carray
 		else static_assert(N <= 3, "rank of array not supported, for rank > 3");
 	}
 
-	/*	\brief Buffer RW operator. Used for read-write access to memory.*/
+	/**	\brief Buffer RW operator. Used for read-write access to memory. */
 	template<typename... IJK>
 	decltype(auto) operator[](IJK&&... ijk)
 	{
@@ -180,6 +182,20 @@ class carray
 		if constexpr (N == 1) return static_cast<vector_t>(ptr_.get())[idx[0]];  
 		else if constexpr (N == 2) return static_cast<matrix_t>(ptr_.get())[idx[0]];
 		else if constexpr (N == 3) return static_cast<tensor_t>(ptr_.get())[idx[0]];
+	}
+
+	/**	\brief Range begin operator. Beginning of contiguous memory block. */
+	T* 
+	begin()
+	{
+		return buffer_.get();
+	}
+
+	/**	\brief Range end operator. End of contiguous memory block. */
+	T* 
+	end()
+	{
+		return buffer_.get() + std::accumulate(shape_.get(), shape_.get() + N, 1, std::multiplies<size_t>());
 	}
 };
 
