@@ -132,7 +132,7 @@ class carray
 
 			if constexpr (N == 1)
 			{
-				ptr_ = buffer_;
+				 ptr_ = std::shared_ptr<void>(buffer_.get(), [](void*){});
 			}
 			else if constexpr (N == 2)
 			{

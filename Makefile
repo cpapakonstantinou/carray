@@ -1,7 +1,10 @@
-TARGET?=carray_test
-CXXFLAGS=-g -std=c++23 -Wall -O0 -I./inc -I /usr/include/eigen3 -march=native
-LDFLAGS?=
-LDLIBS?= 
+TARGET ?= carray_test
+CXXFLAGS = -g -std=c++23 -Wall -O3 -I./inc -I /usr/include/eigen3 
+LDFLAGS ?=
+LDLIBS ?= 
+HEADERS = inc/carray.h inc/aligned_memory.h
+PREFIX ?= /usr
+INSTALLDIR ?= $(PREFIX)/include/carray
 
 $(TARGET).o:test/$(TARGET).cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
@@ -24,5 +27,14 @@ clean:
 
 cleanall: clean
 	$(RM) $(TARGET) benchmark
+
+install: inc/carray.h inc/aligned_memory.h
+	install -d $(INSTALLDIR)
+	install -m 644 $(HEADERS) $(INSTALLDIR)
+
+# Uninstall rule
+uninstall:
+	$(RM) -r $(INSTALLDIR)
+
 
 .DEFAULT_GOAL=$(TARGET)
