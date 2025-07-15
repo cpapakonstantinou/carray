@@ -131,6 +131,40 @@ constructor_test()
 // }
 
 
+std::tuple<bool, bool, bool> 
+view_test()
+{
+	bool v = true, m = true, t = true;
+
+	using test_t = uint8_t;
+	
+	int rows=4,cols=3,depth=2;
+
+	cvector<test_t> vec(rows);
+
+	cmatrix<test_t> mat(rows, cols);
+
+	ctensor<test_t> tensor(rows, cols, depth);
+
+
+	vec[rows-1] = rows;
+	mat[rows-1][cols-1] = rows*cols;
+	tensor[rows-1][cols-1][depth-1] = rows*cols*depth;
+
+	auto r1 = [&rows](test_t* _ )->bool { return _[rows-1] == rows; };
+	auto r2 = [&rows, &cols](test_t** _ )->bool { return _[rows-1][cols-1] == rows*cols; };
+	auto r3 = [&rows, &cols, &depth](test_t*** _ )->bool { return _[rows-1][cols-1][depth-1] == rows*cols*depth; };
+
+
+	v = r1( vec.get() );
+	m = r2( mat.get() );
+	t = r3( tensor.get() );
+
+	return std::make_tuple(v, m, t);
+
+
+}
+
 int main(int argc, char* argv[])
 {
 	try
@@ -152,6 +186,9 @@ int main(int argc, char* argv[])
 		// auto [r, c] = major_order_test();
 
 		// printf("[%s] row major order \n[%s] column major order\n", status(r), status(c) );
+
+		auto [r1, r2, r3] = view_test();
+		printf("[%s] rank1 view\n[%s] rank2 view\n[%s] rank3 view\n", status(r1), status(r2), status(r3) );
 
 	}
 	catch(const std::exception& e)

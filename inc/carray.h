@@ -197,6 +197,15 @@ class carray
 	{
 		return buffer_.get() + std::accumulate(shape_.get(), shape_.get() + N, 1, std::multiplies<size_t>());
 	}
+	
+	/** \brief View acquisition. Acquire the hierarchical view (ptr_) for the buffer*/
+	decltype(auto)
+	get()
+	{
+		if constexpr (N == 1) return static_cast<vector_t>(ptr_.get());  
+		else if constexpr (N == 2) return static_cast<matrix_t>(ptr_.get());
+		else if constexpr (N == 3) return static_cast<tensor_t>(ptr_.get());
+	} 
 };
 
 //Convenience alias for construction. 

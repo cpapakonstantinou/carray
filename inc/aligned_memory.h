@@ -39,9 +39,9 @@ template<class T>
 static T* palign(size_t align, size_t size)
 {
 
-    T* ptr = static_cast<T*>(aligned_alloc(align, size*sizeof(T)));
-    if(ptr==nullptr)
-         throw std::bad_alloc();
+	T* ptr = static_cast<T*>(aligned_alloc(align, size*sizeof(T)));
+	if(ptr==nullptr)
+		 throw std::bad_alloc();
 
 	// T* ptr;
 	// if(posix_memalign(reinterpret_cast<void**>(&ptr),align,size))
@@ -56,7 +56,7 @@ static T* palign(size_t align, size_t size)
  */
 static inline void pdelete(void * ptr) 
 { 
-    free(ptr); 
+	free(ptr); 
 }
 
 /** 
