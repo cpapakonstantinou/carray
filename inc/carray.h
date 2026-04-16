@@ -41,7 +41,7 @@
 template<class T, size_t N, size_t A>
 class carray
 {
-	static_assert(N >= 1 && N <= 3, "carray supports rank <= 3");
+	static_assert(N >= 1 && N <= 4, "carray supports rank <= 4");
 	
 	public:
 		/**
@@ -54,7 +54,7 @@ class carray
 		template<class... IJK>
 		explicit
 		carray(IJK&&... ijk):
-		shape_(new size_t[N]{ static_cast<size_t>(ijk)... })
+		_shape(new size_t[N]{ static_cast<size_t>(ijk)... })
 		{
 			static_assert(sizeof...(IJK) == N, "number of indices must match rank of array");
 			allocate_memory();
@@ -67,9 +67,9 @@ class carray
 		*	\param 	an initialized carray class
 		*/
 		carray(carray<T, N, A>& a):
-		shape_(a.shape_), 
-		buffer_(a.buffer_), 
-		ptr_(a.ptr_)
+		_shape(a._shape), 
+		_buffer(a._buffer), 
+		_ptr(a._ptr)
 		{}
 
 		/**	
@@ -79,9 +79,9 @@ class carray
 		*	\param 	i	number of rows
 		*/
 		carray(carray<T, N, A>&& a) noexcept:
-		shape_(std::move(a.shape_)),
-		buffer_(std::move(a.buffer_)),
-		ptr_(std::move(a.ptr_))
+		_shape(std::move(a._shape)),
+		_buffer(std::move(a._buffer)),
+		_ptr(std::move(a._ptr))
 		{}
 
 		
@@ -91,9 +91,9 @@ class carray
 		{
 			if (&a != this) 
 			{
-				shape_=a.shape_; 
-				buffer_=a.buffer_; 
-				ptr_ = a.ptr_;
+				_shape=a._shape; 
+				_buffer=a._buffer; 
+				_ptr = a._ptr;
 			}
 			return *this;
 		}
@@ -104,9 +104,9 @@ class carray
 		{
 			if (&a != this)
 			{
-				shape_ = std::move(a.shape_); 
-				buffer_ = std::move(a.buffer_); 
-				ptr_ = std::move(a.ptr_);
+				_shape = std::move(a._shape); 
+				_buffer = std::move(a._buffer); 
+				_ptr = std::move(a._ptr);
 			}
 			return *this;
 		}
@@ -116,47 +116,71 @@ class carray
 		using vector_t = T*; ///< vector datatype
 		using matrix_t = T**; ///< matrix datatype
 		using tensor_t = T***; ///< tensor datatype
+		using tetrad_t = T****; ///< tetrad datatype
 		using shape_t = std::shared_ptr<size_t[]>;///< shared array shape datatype		
 		using buffer_t = std::shared_ptr<T[]>; ///< shared contiguous array datatype underlying the memory of the carray
 		using ptr_t = std::shared_ptr<void>; ///< Hierarchical pointer datatype
 		
-		shape_t shape_; ///< shape of the carray
-		buffer_t buffer_; ///< contiguous memory of the carray
-		ptr_t ptr_; ///< Hierarchical pointer for structured memory access to buffer
+		shape_t _shape; ///< shape of the carray
+		buffer_t _buffer; ///< contiguous memory of the carray
+		ptr_t _ptr; ///< Hierarchical pointer for structured memory access to buffer
 
 		inline void
 		allocate_memory()
 		{
-			size_t n = std::accumulate(shape_.get(), shape_.get() + N, 1, std::multiplies<size_t>());
-			buffer_ = make_shared_aarray<T>(A, n); 
+			size_t n = std::accumulate(_shape.get(), _shape.get() + N, 1, std::multiplies<size_t>());
+			_buffer = make_shared_aarray<T>(A, n); 
 
 			if constexpr (N == 1)
 			{
-				 ptr_ = std::shared_ptr<void>(buffer_.get(), [](void*){});
+				 _ptr = std::shared_ptr<void>(_buffer.get(), [](void*){});
 			}
 			else if constexpr (N == 2)
 			{
-				matrix_t matrix = static_cast<matrix_t>(palign<vector_t>(A, shape_[0]));
-				for (size_t i = 0; i < shape_[0]; ++i)
-					matrix[i] = &buffer_[i * shape_[1]];
-				ptr_ = std::shared_ptr<void>(matrix, &pdelete);
+				matrix_t matrix = static_cast<matrix_t>(palign<vector_t>(A, _shape[0]));
+				for (size_t i = 0; i < _shape[0]; ++i)
+					matrix[i] = &_buffer[i * _shape[1]];
+				_ptr = std::shared_ptr<void>(matrix, &pdelete);
 			}
 			else if constexpr (N == 3)
 			{
-				tensor_t tensor = static_cast<tensor_t>(palign<matrix_t>(A, shape_[0]));
-				matrix_t matrix = static_cast<matrix_t>(palign<vector_t>(A, shape_[0] * shape_[1]));
+				tensor_t tensor = static_cast<tensor_t>(palign<matrix_t>(A, _shape[0]));
+				matrix_t matrix = static_cast<matrix_t>(palign<vector_t>(A, _shape[0] * _shape[1]));
 
-				for (size_t i = 0; i < shape_[0]; ++i)
+				for (size_t i = 0; i < _shape[0]; ++i)
 				{
-					tensor[i] = &matrix[i * shape_[1]];
-					for (size_t j = 0; j < shape_[1]; ++j)
-						tensor[i][j] = &buffer_[(i * shape_[1] + j) * shape_[2]];
+					tensor[i] = &matrix[i * _shape[1]];
+					for (size_t j = 0; j < _shape[1]; ++j)
+						tensor[i][j] = &_buffer[(i * _shape[1] + j) * _shape[2]];
 				}
-				ptr_ = std::shared_ptr<void>(tensor, [](void* ptr){
+				_ptr = std::shared_ptr<void>(tensor, [](void* ptr){
 					pdelete(static_cast<tensor_t>(ptr)[0]); pdelete(ptr);});
 			}
-		}
+			else if constexpr (N == 4)
+			{
+				tetrad_t tetrad = static_cast<tetrad_t>(palign<tensor_t>(A, _shape[0]));
+				tensor_t tensor = static_cast<tensor_t>(palign<matrix_t>(A, _shape[0] * _shape[1]));
+				matrix_t matrix = static_cast<matrix_t>(palign<vector_t>(A, _shape[0] * _shape[1] * _shape[2]));
 
+				for (size_t t = 0; t < _shape[0]; ++t)
+				{
+					tetrad[t] = &tensor[t * _shape[1]];
+					for (size_t i = 0; i < _shape[1]; ++i)
+					{
+						tetrad[t][i] = &matrix[(t * _shape[1] + i) * _shape[2]];
+						for (size_t j = 0; j < _shape[2]; ++j)
+							tetrad[t][i][j] = &_buffer[((t * _shape[1] + i) * _shape[2] + j) * _shape[3]];
+					}
+				}
+
+				_ptr = std::shared_ptr<void>(tetrad, [](void* ptr){
+					auto p = static_cast<tetrad_t>(ptr);
+					pdelete(p[0][0]);
+					pdelete(p[0]);
+					pdelete(ptr);
+				});
+			}
+		}
 
 	public:
 	/**	\brief Buffer RO operator. Used for read-only access to memory. */
@@ -167,10 +191,11 @@ class carray
 
 		size_t idx[] = { static_cast<size_t>(ijk)... };
 
-		if constexpr (N == 1) return static_cast<vector_t>(ptr_.get())[idx[0]];
-		else if constexpr (N == 2) return static_cast<matrix_t>(ptr_.get())[idx[0]][idx[1]];
-		else if constexpr (N == 3) return static_cast<tensor_t>(ptr_.get())[idx[0]][idx[1]][idx[2]];
-		else static_assert(N <= 3, "rank of array not supported, for rank > 3");
+		if constexpr (N == 1) return static_cast<vector_t>(_ptr.get())[idx[0]];
+		else if constexpr (N == 2) return static_cast<matrix_t>(_ptr.get())[idx[0]][idx[1]];
+		else if constexpr (N == 3) return static_cast<tensor_t>(_ptr.get())[idx[0]][idx[1]][idx[2]];
+		else if constexpr (N == 4) return static_cast<tetrad_t>(_ptr.get())[idx[0]][idx[1]][idx[2]][idx[3]];
+		else static_assert(N <= 4, "rank of array not supported, for rank > 4");
 	}
 
 	/**	\brief Buffer RW operator. Used for read-write access to memory. */
@@ -179,32 +204,34 @@ class carray
 	{
 		size_t idx[] = { static_cast<size_t>(ijk)... };  
 
-		if constexpr (N == 1) return static_cast<vector_t>(ptr_.get())[idx[0]];  
-		else if constexpr (N == 2) return static_cast<matrix_t>(ptr_.get())[idx[0]];
-		else if constexpr (N == 3) return static_cast<tensor_t>(ptr_.get())[idx[0]];
+		if constexpr (N == 1) return static_cast<vector_t>(_ptr.get())[idx[0]];  
+		else if constexpr (N == 2) return static_cast<matrix_t>(_ptr.get())[idx[0]];
+		else if constexpr (N == 3) return static_cast<tensor_t>(_ptr.get())[idx[0]];
+		else if constexpr (N == 4) return static_cast<tetrad_t>(_ptr.get())[idx[0]];
 	}
 
 	/**	\brief Range begin operator. Beginning of contiguous memory block. */
 	T* 
 	begin()
 	{
-		return buffer_.get();
+		return _buffer.get();
 	}
 
 	/**	\brief Range end operator. End of contiguous memory block. */
 	T* 
 	end()
 	{
-		return buffer_.get() + std::accumulate(shape_.get(), shape_.get() + N, 1, std::multiplies<size_t>());
+		return _buffer.get() + std::accumulate(_shape.get(), _shape.get() + N, 1, std::multiplies<size_t>());
 	}
 	
-	/** \brief View acquisition. Acquire the hierarchical view (ptr_) for the buffer*/
+	/** \brief View acquisition. Acquire the hierarchical view (_ptr) for the buffer*/
 	decltype(auto)
 	get()
 	{
-		if constexpr (N == 1) return static_cast<vector_t>(ptr_.get());  
-		else if constexpr (N == 2) return static_cast<matrix_t>(ptr_.get());
-		else if constexpr (N == 3) return static_cast<tensor_t>(ptr_.get());
+		if constexpr (N == 1) return static_cast<vector_t>(_ptr.get());  
+		else if constexpr (N == 2) return static_cast<matrix_t>(_ptr.get());
+		else if constexpr (N == 3) return static_cast<tensor_t>(_ptr.get());
+		else if constexpr (N == 4) return static_cast<tetrad_t>(_ptr.get());
 	} 
 };
 
@@ -214,5 +241,6 @@ class carray
 template<typename T> using cvector = carray<T, 1, 64>;///< shortcut for array of Type T and Rank 1.
 template<typename T> using cmatrix = carray<T, 2, 64>;///< shortcut for array of Type T and Rank 2.
 template<typename T> using ctensor = carray<T, 3, 64>;///< shortcut for array of Type T and Rank 3.
+template<typename T> using ctetrad = carray<T, 4, 64>;///< shortcut for array of Type T and Rank 3.
 
 #endif //__C_ARRAY_H__

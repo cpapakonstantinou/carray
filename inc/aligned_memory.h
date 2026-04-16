@@ -63,7 +63,6 @@ static inline void pdelete(void * ptr)
  *  type alias unique_ptrs since the deleter is part of the type
  *  note for shared_ptrs the deleter is only part of the constructor, not the type 
  */
-  
 ///alias for memory aligned unique pointer types
 template<class T> using unique_ptr_aligned = std::unique_ptr<T, decltype(&pdelete)>;
 ///alias for memory aligned unique pointer array types
